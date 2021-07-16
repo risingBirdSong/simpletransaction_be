@@ -28,10 +28,10 @@ postSimpleaccountR = do
     -- name <- simpleaccountName <$> simple
     -- let name = (simpleaccountName body)
     -- problem
-    Prelude.print (simpleaccountPassword)
-    Couldn't match type ‘IO’ with ‘HandlerFor App’
-      Expected type: HandlerFor App ()
-        Actual type: IO ()
+    -- Prelude.print (simpleaccountPassword)
+    -- Couldn't match type ‘IO’ with ‘HandlerFor App’
+    --   Expected type: HandlerFor App ()
+    --     Actual type: IO ()
     -- solution 
     _ <- liftIO $ Prelude.print (simpleaccountName)
     _ <- liftIO $ Prelude.print (simpleaccountPassword)
