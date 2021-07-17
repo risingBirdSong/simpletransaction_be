@@ -28,6 +28,7 @@ Account json
 
 Simpleaccount json 
     name String
+    UniqueName name
     password String -- bad idea don't do this!
     deriving Eq 
     deriving Show
