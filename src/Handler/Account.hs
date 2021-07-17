@@ -42,8 +42,21 @@ postSimpleaccountR = do
             accountBalance = 0.00 , 
             accountAdmin = False
     }
-    inserted <- runDB $ insert account `catch` (\(SomeException e) -> sendResponseStatus status303 ("That name has already been taken" :: String))
+    inserted <- runDB $ insert account `catch` (\(SomeException e) -> lift $ catcher )
     sendResponseStatus status201 ("CREATED" :: String)
 
--- catcher :: (MonadHandler m , Show p) => p -> m a
--- catcher err = do
+catcher :: HandlerFor App a
+catcher = sendResponseStatus status201 ("That name has already been taken, please pick another" :: String)
+
+-- postMyloginR :: Handler ()
+-- postMyloginR = do
+--     attempt@Mylogin {..} <- (requireCheckJsonBody :: Handler Mylogin)
+--     mUser <- selectFirst [MyloginName ==. myloginName] []
+--     case mUser of 
+--         Nothing -> sendResponseStatus status404 ("that name doesnt exist in our records")
+--         Just user -> do 
+--             print user 
+--             print attempt
+--     sendResponseStatus status201 ("we all good" :: String)
+
+

@@ -33,6 +33,12 @@ Simpleaccount json
     deriving Eq 
     deriving Show
 
+Mylogin json 
+    name String 
+    password String 
+    deriving Eq 
+    deriving Show
+
 -- Item json 
 --     name Text
 --     description Text
