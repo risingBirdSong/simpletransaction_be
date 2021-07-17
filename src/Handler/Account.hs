@@ -32,9 +32,9 @@ getAccountR thename = do
 
 postSimpleaccountR :: Handler ()
 postSimpleaccountR = do 
-    -- Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount) `catch` (\(SomeException e) -> (sendResponseStatus status201 ("didnt work" :: String)))
-    Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount) `catch` (\(SomeException e) -> catcher e )
-
+    
+    Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount)
+    
     let account = Account {
             accountName = simpleaccountName , 
             accountPassword = simpleaccountPassword ,
@@ -42,11 +42,8 @@ postSimpleaccountR = do
             accountBalance = 0.00 , 
             accountAdmin = False
     }
-    _ <- liftIO $ print account
-    inserted <- runDB $ insert account
+    inserted <- runDB $ insert account `catch` (\(SomeException e) -> sendResponseStatus status303 ("That name has already been taken" :: String))
     sendResponseStatus status201 ("CREATED" :: String)
 
-catcher :: (MonadHandler m , Show p) => p -> m a
-catcher err = do
-    print err
-    sendResponseStatus status201 ("didnt work" :: String)
+-- catcher :: (MonadHandler m , Show p) => p -> m a
+-- catcher err = do
