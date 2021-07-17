@@ -48,15 +48,17 @@ postSimpleaccountR = do
 catcher :: HandlerFor App a
 catcher = sendResponseStatus status201 ("That name has already been taken, please pick another" :: String)
 
--- postMyloginR :: Handler ()
--- postMyloginR = do
---     attempt@Mylogin {..} <- (requireCheckJsonBody :: Handler Mylogin)
---     mUser <- selectFirst [MyloginName ==. myloginName] []
---     case mUser of 
---         Nothing -> sendResponseStatus status404 ("that name doesnt exist in our records")
---         Just user -> do 
---             print user 
---             print attempt
---     sendResponseStatus status201 ("we all good" :: String)
+postMyloginR :: Handler ()
+postMyloginR = do
+    attempt@Mylogin {..} <- (requireCheckJsonBody :: Handler Mylogin)
+    mAcc <- runDB $ selectFirst [AccountName ==. myloginName] []
+    case mAcc of 
+        Nothing -> sendResponseStatus status201 ("that name doesnt exist in our records" :: String)
+        Just (Entity _ user) -> do
+            if (myloginPassword == accountPassword user) then do 
+               _ <- runDB $ updateWhere [AccountName ==. (accountName user)] [AccountLoggedIn =. True] 
+               sendResponseStatus status201 ("logged in!" :: String)
+               else sendResponseStatus status201 ("incorrect password" :: String)
+
 
 

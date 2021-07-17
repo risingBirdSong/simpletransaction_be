@@ -18,7 +18,7 @@
 
 /simpleaccount SimpleaccountR POST 
 
--- /login MyloginR POST
+/login MyloginR POST
 
 
 -- /items ItemsR GET POST 
