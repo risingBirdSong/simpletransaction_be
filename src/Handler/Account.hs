@@ -1,7 +1,12 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RecordWildCards #-}
 module Handler.Account where
 
 import Import
+import Control.Monad.Error
+import Control.Exception (SomeException)
+
+
 
 -- postAccountR :: String -> Handler ()
 -- postAccountR thename = do
@@ -27,17 +32,21 @@ getAccountR thename = do
 
 postSimpleaccountR :: Handler ()
 postSimpleaccountR = do 
-    Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount)
-    doesexist <- runDB $ selectFirst [AccountName ==. simpleaccountName] []
-    case doesexist of
-        Just alreadyName -> sendResponseStatus status201 ("That name is already taken, choose another" :: String)
-        Nothing -> do 
-            let account = Account {
-                    accountName = simpleaccountName , 
-                    accountPassword = simpleaccountPassword ,
-                    accountLoggedIn = False ,
-                    accountBalance = 0.00 , 
-                    accountAdmin = False
-            }
-            inserted <- runDB $ insert account
-            sendResponseStatus status201 ("CREATED" :: String)
+    -- Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount) `catch` (\(SomeException e) -> (sendResponseStatus status201 ("didnt work" :: String)))
+    Simpleaccount {..} <- (requireCheckJsonBody :: Handler Simpleaccount) `catch` (\(SomeException e) -> catcher e )
+
+    let account = Account {
+            accountName = simpleaccountName , 
+            accountPassword = simpleaccountPassword ,
+            accountLoggedIn = False ,
+            accountBalance = 0.00 , 
+            accountAdmin = False
+    }
+    _ <- liftIO $ print account
+    inserted <- runDB $ insert account
+    sendResponseStatus status201 ("CREATED" :: String)
+
+catcher :: (MonadHandler m , Show p) => p -> m a
+catcher err = do
+    print err
+    sendResponseStatus status201 ("didnt work" :: String)

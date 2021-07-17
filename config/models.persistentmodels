@@ -19,6 +19,7 @@ Comment json -- Adding "json" causes ToJSON and FromJSON instances to be derived
 
 Account json
     name String
+    UniqueAccountName name
     password String -- bad idea don't do this!
     loggedIn Bool
     balance Double
@@ -28,7 +29,6 @@ Account json
 
 Simpleaccount json 
     name String
-    UniqueName name
     password String -- bad idea don't do this!
     deriving Eq 
     deriving Show

@@ -97,7 +97,7 @@ allowCors = cors (const $ Just appCorsResourcePolicy)
 appCorsResourcePolicy :: CorsResourcePolicy
 appCorsResourcePolicy =
     simpleCorsResourcePolicy
-        { corsMethods = ["OPTIONS", "GET", "PUT", "POST"]
+        { corsMethods = ["OPTIONS", "GET", "PUT", "POST", "DELETE"]
         , corsRequestHeaders = ["Authorization", "Content-Type"]
         }
 
@@ -108,6 +108,7 @@ makeApplication foundation = do
     logWare <- makeLogWare foundation
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
+    -- return $ logWare $ defaultMiddlewaresNoLogging $ simpleCors appPlain
     return $ logWare $ defaultMiddlewaresNoLogging $ allowCors appPlain
 
 makeLogWare :: App -> IO Middleware
