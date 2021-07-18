@@ -48,7 +48,7 @@ postSimpleaccountR = do
 catcher :: HandlerFor App a
 catcher = sendResponseStatus status201 ("That name has already been taken, please pick another" :: String)
 
-postMyloginR :: Handler ()
+postMyloginR :: Handler Value
 postMyloginR = do
     attempt@Mylogin {..} <- (requireCheckJsonBody :: Handler Mylogin)
     mAcc <- runDB $ selectFirst [AccountName ==. myloginName] []
@@ -57,8 +57,17 @@ postMyloginR = do
         Just (Entity _ user) -> do
             if (myloginPassword == accountPassword user) then do 
                _ <- runDB $ updateWhere [AccountName ==. (accountName user)] [AccountLoggedIn =. True] 
-               sendResponseStatus status201 ("logged in!" :: String)
-               else sendResponseStatus status201 ("incorrect password" :: String)
+               returnJson $ object [(pack "message") .= "logged in!", (pack "loggedstatus" .= True), (pack "currentUser" .= (accountName user))]
+               else returnJson $ object [(pack "message") .= "wrong password!", (pack "loggedstatus" .= False)]
 
 
-
+postMylogoutR :: Handler Value
+postMylogoutR = do 
+    Mylogout {..} <- (requireCheckJsonBody :: Handler Mylogout)
+    mAcc <- runDB $ selectFirst [AccountName ==. mylogoutName] []
+    case mAcc of
+        Nothing -> returnJson $ object [(pack "message") .= "how did you get here?"]
+        Just acc -> do 
+            _ <- runDB $ updateWhere [AccountName ==. mylogoutName] [AccountLoggedIn =. False]
+            returnJson $ object [(pack "message") .= "logged out!", (pack "loggedstatus" .= False)]
+ 

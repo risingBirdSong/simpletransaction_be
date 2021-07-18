@@ -20,5 +20,7 @@
 
 /login MyloginR POST
 
+/logout MylogoutR POST
+
 
 -- /items ItemsR GET POST 

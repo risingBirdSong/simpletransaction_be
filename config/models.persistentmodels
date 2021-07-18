@@ -39,6 +39,11 @@ Mylogin json
     deriving Eq 
     deriving Show
 
+Mylogout json
+    name String 
+    deriving Eq 
+    deriving Show
+
 -- Item json 
 --     name Text
 --     description Text
