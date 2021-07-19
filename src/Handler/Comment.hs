@@ -14,3 +14,4 @@ postCommentR = do
 
     insertedComment <- runDB $ insertEntity comment'
     returnJson insertedComment
+

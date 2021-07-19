@@ -99,17 +99,23 @@ postTransactionR = do
     print from
     return ()
 
-data Somethingsimple = Somethingsimple {
-    name :: String
-} deriving (Generic, Show)
-
--- instance FromJSON Somethingsimple
--- instance ToJSON Somethingsimple
-
 getTransactiongetR :: String -> Handler Value
 getTransactiongetR username = do 
-    eAccounts <- runDB $ selectList [AccountName !=. username] []
+    eAccounts <- runDB $ selectList [AccountName !=. username] [Asc AccountName]
     let accounts  = map (\(Entity _ acc) -> acc) eAccounts
-    let simples = map (\Account a b c d e-> Somethingsimple a) accounts
-    -- returnJson $ object $ [(pack "accounts") .= simples]
-    returnJson simples
+    let displayaccounts = map displayAccount accounts
+    returnJson $ object $ [(pack "accounts") .= displayaccounts]
+    -- returnJson simples
+
+
+data PublicAccount = PublicAccount {
+    publicName :: String
+} deriving (Generic, Show)
+
+instance FromJSON PublicAccount
+instance ToJSON PublicAccount
+
+displayAccount :: Account -> PublicAccount
+displayAccount accnt = PublicAccount {
+        publicName = accountName accnt
+    }
