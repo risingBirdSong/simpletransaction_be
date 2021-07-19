@@ -100,8 +100,11 @@ postTransactionR = do
         (Just (Entity _ from) , Just (Entity _ to)) -> do
             _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount)] 
             newTo <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount)]
-            [(Entity _ newFrom)] <- runDB $ selectList [AccountName ==. (accountName from)] []
-            sendResponseStatus status201 ("you successfully sent " ++ (show transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is" ++ (show (accountBalance newFrom)) :: String)
+            mEntity <- runDB $ selectFirst [AccountName ==. (accountName from)] []
+            -- could do something like this ... fmap head . runDB $ ...
+            case mEntity of
+                Just (Entity _ newFrom) -> sendResponseStatus status201 ("you successfully sent " ++ (show transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is " ++ (show (accountBalance newFrom)) :: String)
+                Nothing -> sendResponseStatus status400 ("wait... what just happened?" :: String)
         
         _ -> sendResponseStatus status400 ("one of the accounts didnt work" :: String)
     print "trans"
