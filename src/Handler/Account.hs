@@ -1,4 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 {-# LANGUAGE RecordWildCards #-}
 module Handler.Account where
 
@@ -21,11 +23,21 @@ import Control.Exception (SomeException)
 --     inserted <- runDB $ insert account
 --     sendResponseStatus status201 ("CREATED" :: String)
 
+
+safeAccountInfo :: Account -> Handler Value
+safeAccountInfo (Account {..}) = do 
+    returnJson $ object [
+        (pack "name") .= accountName , 
+        (pack "loggedIn" .= accountLoggedIn) ,
+        (pack "balance") .= accountBalance
+        ]
+
 getAccountR :: String -> Handler Value 
 getAccountR thename = do
-    theuser <- runDB $ selectList [AccountName ==. (pack thename)] [] :: Handler [Entity Account]
-    return $ object [(pack "user") .= theuser]
-
+    (mAccount) <- runDB $ selectFirst [AccountName ==. (pack thename)] []
+    case mAccount of
+        Just (Entity _ account) -> safeAccountInfo account 
+        Nothing -> sendResponseStatus status404 ("The account not found" :: String)
 
 -- is there a better way to do this? Kinda feels hacky using Simpleaccount to send name and password just so they can be placed in an Account. 
 -- The reason for this is because default wasnt working and I didnt want the FE to send all that excess data.
@@ -71,3 +83,33 @@ postMylogoutR = do
             _ <- runDB $ updateWhere [AccountName ==. mylogoutName] [AccountLoggedIn =. False]
             returnJson $ object [(pack "message") .= "logged out!", (pack "loggedstatus" .= False)]
  
+
+data TransactionParties = TransactionParties {
+    from :: String , 
+    to   :: String
+} deriving (Generic, Show)
+
+instance FromJSON TransactionParties
+
+postTransactionR :: Handler ()
+postTransactionR = do
+    all@(TransactionParties {..}) <- (requireCheckJsonBody :: Handler TransactionParties)
+    print "from"
+    print all
+    print from
+    return ()
+
+data Somethingsimple = Somethingsimple {
+    name :: String
+} deriving (Generic, Show)
+
+-- instance FromJSON Somethingsimple
+-- instance ToJSON Somethingsimple
+
+getTransactiongetR :: String -> Handler Value
+getTransactiongetR username = do 
+    eAccounts <- runDB $ selectList [AccountName !=. username] []
+    let accounts  = map (\(Entity _ acc) -> acc) eAccounts
+    let simples = map (\Account a b c d e-> Somethingsimple a) accounts
+    -- returnJson $ object $ [(pack "accounts") .= simples]
+    returnJson simples

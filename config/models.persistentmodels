@@ -27,6 +27,14 @@ Account json
     deriving Eq 
     deriving Show
 
+Transaction json
+    note String
+    amount String
+    fromAccount Account
+    toAccount Account 
+    deriving Eq 
+    deriving Show 
+
 Simpleaccount json 
     name String
     password String -- bad idea don't do this!

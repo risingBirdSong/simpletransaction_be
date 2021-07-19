@@ -22,5 +22,10 @@
 
 /logout MylogoutR POST
 
+/transaction TransactionR POST
+
+/transactionget/#String TransactiongetR GET
+
+
 
 -- /items ItemsR GET POST 
