@@ -91,13 +91,27 @@ data TransactionParties = TransactionParties {
 
 instance FromJSON TransactionParties
 
-postTransactionR :: Handler ()
+postTransactionR :: Handler Value
 postTransactionR = do
-    all@(TransactionParties {..}) <- (requireCheckJsonBody :: Handler TransactionParties)
-    print "from"
-    print all
-    print from
-    return ()
+    trans@Transaction {..} <- (requireCheckJsonBody :: Handler Transaction)
+    mFrom <- runDB $ selectFirst [AccountName ==. transactionFrom] []
+    mTo <- runDB $ selectFirst [AccountName ==. transactionTo] []
+    case (mFrom, mTo) of
+        (Just (Entity _ from) , Just (Entity _ to)) -> do
+            _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount)] 
+            newTo <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount)]
+            [(Entity _ newFrom)] <- runDB $ selectList [AccountName ==. (accountName from)] []
+            sendResponseStatus status201 ("you successfully sent " ++ (show transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is" ++ (show (accountBalance newFrom)) :: String)
+        
+        _ -> sendResponseStatus status400 ("one of the accounts didnt work" :: String)
+    print "trans"
+    print trans
+    -- sendResponseStatus status400 ("one of the accounts didnt work" :: String)
+    -- print "mFrom"
+    -- print mFrom
+    -- print "mTo"
+    -- print mTo
+    returnJson $ object [(pack "res") .= "test"]
 
 getTransactiongetR :: String -> Handler Value
 getTransactiongetR username = do 
@@ -105,7 +119,6 @@ getTransactiongetR username = do
     let accounts  = map (\(Entity _ acc) -> acc) eAccounts
     let displayaccounts = map displayAccount accounts
     returnJson $ object $ [(pack "accounts") .= displayaccounts]
-    -- returnJson simples
 
 
 data PublicAccount = PublicAccount {

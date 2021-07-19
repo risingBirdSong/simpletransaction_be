@@ -29,9 +29,9 @@ Account json
 
 Transaction json
     note String
-    amount String
-    fromAccount Account
-    toAccount Account 
+    amount Double
+    from String
+    to String 
     deriving Eq 
     deriving Show 
 
