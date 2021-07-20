@@ -8,22 +8,6 @@ import Import
 import Control.Monad.Error
 import Control.Exception (SomeException)
 
-
-
--- postAccountR :: String -> Handler ()
--- postAccountR thename = do
---     -- account <- (requireCheckJsonBody :: Handler Account)
---     let account = Account {
---             accountName = ("abc") , 
---             accountPassword = "pass" ,-- bad idea don't do this!
---             accountLoggedIn = False ,
---             accountBalance = 0.00 , 
---             accountAdmin = False
---     }
---     inserted <- runDB $ insert account
---     sendResponseStatus status201 ("CREATED" :: String)
-
-
 safeAccountInfo :: Account -> Handler Value
 safeAccountInfo (Account {..}) = do 
     returnJson $ object [
@@ -98,22 +82,18 @@ postTransactionR = do
     mTo <- runDB $ selectFirst [AccountName ==. transactionTo] []
     case (mFrom, mTo) of
         (Just (Entity _ from) , Just (Entity _ to)) -> do
-            _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount)] 
-            newTo <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount)]
-            mEntity <- runDB $ selectFirst [AccountName ==. (accountName from)] []
-            -- could do something like this ... fmap head . runDB $ ...
-            case mEntity of
-                Just (Entity _ newFrom) -> sendResponseStatus status201 ("you successfully sent " ++ (show transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is " ++ (show (accountBalance newFrom)) :: String)
-                Nothing -> sendResponseStatus status400 ("wait... what just happened?" :: String)
-        
+            if (isNaN (transactionAmount)) then sendResponseStatus status201 ("we couldnt read the number" :: String)
+            else do 
+                if (transactionAmount > (accountBalance from)) then sendResponseStatus status201 ("insufficient funds" :: String) 
+                else do
+                    _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount)] 
+                    newTo <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount)]
+                    mEntity <- runDB $ selectFirst [AccountName ==. (accountName from)] []
+                    case mEntity of
+                        Just (Entity _ newFrom) -> sendResponseStatus status201 ("you successfully sent " ++ (show transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is " ++ (show (accountBalance newFrom)) :: String)
+                        Nothing -> sendResponseStatus status400 ("wait... what just happened?" :: String)
+            
         _ -> sendResponseStatus status400 ("one of the accounts didnt work" :: String)
-    print "trans"
-    print trans
-    -- sendResponseStatus status400 ("one of the accounts didnt work" :: String)
-    -- print "mFrom"
-    -- print mFrom
-    -- print "mTo"
-    -- print mTo
     returnJson $ object [(pack "res") .= "test"]
 
 getTransactiongetR :: String -> Handler Value
