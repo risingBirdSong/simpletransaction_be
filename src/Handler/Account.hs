@@ -79,7 +79,7 @@ instance FromJSON TransactionParties
 postTransactionR :: Handler Value
 postTransactionR = do
     print "hitting"
-    (Entity transkey trans) <- (requireCheckJsonBody :: Handler (Entity Transaction)) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String))
+    (Entity transkey trans) <- (requireCheckJsonBody :: Handler (Entity Transaction)) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String)) -- HCError InvalidArgs ["key \"id\" not found"]
     print trans
     mFrom <- runDB $ selectFirst [AccountName ==. (transactionFrom trans)] []
     mTo <- runDB $ selectFirst [AccountName ==. (transactionTo trans)] []
