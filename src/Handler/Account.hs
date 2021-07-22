@@ -78,14 +78,10 @@ instance FromJSON TransactionParties
 
 postTransactionR :: Handler Value
 postTransactionR = do
-    print "hitting"
-    (Transaction {..}) <- (requireCheckJsonBody) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String)) -- HCError InvalidArgs ["key \"id\" not found"]
-    -- let aaa = entityVal <$> what
+    aaa@(Transaction {..}) <- (requireCheckJsonBody) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String)) -- HCError InvalidArgs ["key \"id\" not found"] 
+    -- printing aaa ===> Transaction {transactionNote = "pay a", transactionAmount = 0.1, transactionFrom = "aaa", transactionTo = "bbb"}
     mFrom <- runDB $ selectFirst [AccountName ==. (transactionFrom)] []
     mTo <- runDB $ selectFirst [AccountName ==. (transactionTo )] []
-    print "from and to"
-    print mFrom
-    print mTo
     case (mFrom, mTo) of
         (Just (Entity fromkey from) , Just (Entity tokey to))
             | (isNaN (transactionAmount)) -> sendResponseStatus status201 ("we couldnt read the number" :: String)
