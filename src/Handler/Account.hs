@@ -79,24 +79,24 @@ instance FromJSON TransactionParties
 postTransactionR :: Handler Value
 postTransactionR = do
     print "hitting"
-    (Entity transkey trans) <- (requireCheckJsonBody :: Handler (Entity Transaction)) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String)) -- HCError InvalidArgs ["key \"id\" not found"]
-    print trans
-    mFrom <- runDB $ selectFirst [AccountName ==. (transactionFrom trans)] []
-    mTo <- runDB $ selectFirst [AccountName ==. (transactionTo trans)] []
+    (Transaction {..}) <- (requireCheckJsonBody) `catch` (\(SomeException e) -> sendResponseStatus status201 ((show e) :: String)) -- HCError InvalidArgs ["key \"id\" not found"]
+    -- let aaa = entityVal <$> what
+    mFrom <- runDB $ selectFirst [AccountName ==. (transactionFrom)] []
+    mTo <- runDB $ selectFirst [AccountName ==. (transactionTo )] []
     print "from and to"
     print mFrom
     print mTo
     case (mFrom, mTo) of
         (Just (Entity fromkey from) , Just (Entity tokey to))
-            | (isNaN (transactionAmount trans)) -> sendResponseStatus status201 ("we couldnt read the number" :: String)
-            | ((transactionAmount trans) > (accountBalance from)) -> sendResponseStatus status201 ("insufficient funds" :: String) 
+            | (isNaN (transactionAmount)) -> sendResponseStatus status201 ("we couldnt read the number" :: String)
+            | ((transactionAmount) > (accountBalance from)) -> sendResponseStatus status201 ("insufficient funds" :: String) 
             | otherwise -> do
-                _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount trans)] 
-                _ <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount trans)]
+                _ <- runDB $ updateWhere [AccountName ==. (accountName from)] [AccountBalance -=. (transactionAmount)] 
+                _ <- runDB $ updateWhere [AccountName ==. (accountName to)] [AccountBalance +=. (transactionAmount)]
                 mEntity <- runDB $ selectFirst [AccountName ==. (accountName from)] []
-                _ <- runDB $ insert $ trans
+                _ <- runDB $ insert $ Transaction {..}
                 case mEntity of
-                    Just (Entity _ newFrom) -> sendResponseStatus status201 ("you successfully sent " ++ (show $ transactionAmount trans) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is " ++ (show (accountBalance newFrom)) :: String)
+                    Just (Entity _ newFrom) -> sendResponseStatus status201 ("you successfully sent " ++ (show $ transactionAmount) ++ " to " ++ (show $ accountName to) ++ ". Your new balance is " ++ (show (accountBalance newFrom)) :: String)
                     Nothing -> sendResponseStatus status201 ("wait... what just happened?" :: String)
         
         _ -> do 
