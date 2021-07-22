@@ -25,7 +25,7 @@ Account json
     balance Double
     admin Bool
     deriving Eq 
-    deriving Show
+    deriving Show 
 
 Transaction json
     note String
